@@ -22,6 +22,14 @@ class PadRenderer @JvmOverloads constructor(
     private var lx = 0f; private var ly = 0f
     private var rx = 0f; private var ry = 0f
     private var lt = 0f; private var rt = 0f
+    private var viewW = 1f
+    private var viewH = 1f
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        viewW = if (w > 0) w.toFloat() else 1f
+        viewH = if (h > 0) h.toFloat() else 1f
+    }
 
     private val bodyPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.argb(255, 30, 32, 40); style = Paint.Style.FILL
@@ -147,7 +155,7 @@ class PadRenderer @JvmOverloads constructor(
         canvas.drawText(ch, cx0, cy0 + r * 0.38f, labelPaint)
     }
 
-    private val sFace: Float get() = h * 0.075f
+    private val sFace: Float get() = viewH * 0.075f
 
     private fun faceColor(btn: LogicalButton): Paint {
         val color = when (btn) {
@@ -165,23 +173,23 @@ class PadRenderer @JvmOverloads constructor(
     private fun has(btn: LogicalButton): Boolean = buttons[btn.ordinal]
 
     private fun drawBumper(canvas: Canvas, btn: LogicalButton, cx: Float, cy: Float, w: Float, trig: LogicalButton, ch: String) {
-        val bh = h * 0.05f
+        val bh = viewH * 0.05f
         val p = if (has(btn)) activePaint else basePaint
         val rect = RectF(cx, cy, cx + w, cy + bh)
         canvas.drawRoundRect(rect, bh * 0.5f, bh * 0.5f, p)
-        labelPaint.textSize = h * 0.045f
+        labelPaint.textSize = viewH * 0.045f
         canvas.drawText(ch, cx + w / 2f, cy + bh * 0.66f, labelPaint)
     }
 
     private fun drawTriggerBar(canvas: Canvas, value: Float, cx: Float, w: Float) {
-        val bh = h * 0.012f
-        val top = h * 0.02f - bh / 2f
+        val bh = viewH * 0.012f
+        val top = viewH * 0.02f - bh / 2f
         canvas.drawRect(RectF(cx, top, cx + w * value.coerceIn(0f, 1f), top + bh), activePaint)
         canvas.drawRect(RectF(cx, top, cx + w, top + bh), strokePaint)
     }
 
     private fun drawCenter(canvas: Canvas, btn: LogicalButton, cx: Float, cy: Float, ch: String) {
-        val r = h * 0.03f
+        val r = viewH * 0.03f
         val p = if (has(btn)) activePaint else basePaint
         canvas.drawCircle(cx, cy, r * 1.5f, p)
         canvas.drawText(ch, cx, cy + r * 0.55f, labelPaint)

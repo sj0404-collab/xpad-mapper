@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+import com.xpad.mapper.DiagResult
 import com.xpad.mapper.DeviceDiag
 import com.xpad.mapper.PadState
 import com.xpad.mapper.R
@@ -123,7 +124,7 @@ class DevicesFragment : Fragment() {
 
     data class DeviceItem(
         val device: android.view.InputDevice,
-        val diag: DeviceDiag.DiagResult,
+        val diag: DiagResult,
         val hasProfile: Boolean,
         val selected: Boolean?
     )

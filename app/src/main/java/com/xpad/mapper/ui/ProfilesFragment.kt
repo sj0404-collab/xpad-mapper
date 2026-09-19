@@ -230,7 +230,7 @@ class ProfilesFragment : Fragment() {
                     textSize = 13f
                     setPadding(0, 0, dp(8), 0)
                 }
-                val seek = ProgressBar(requireContext(), null, android.R.attr.seekBarStyle)
+                val seek = android.widget.SeekBar(requireContext())
                 seek.max = 50
                 seek.progress = (opts.deadZone * 100).toInt().coerceIn(0, 50)
                 seek.setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
@@ -281,7 +281,7 @@ class ProfilesFragment : Fragment() {
         padInput.listener = object : GamepadTestView.Listener {
             override fun onButtonPress(keyCode: Int, action: Int) {
                 if (captureFor != null && action == MotionEvent.ACTION_DOWN) {
-                    val target = captureFor
+                    val target = captureFor ?: return
                     working = working.copy(buttonMap = working.buttonMap + (keyCode to target))
                     captureFor = null
                     captureInfo.text = "Запомнено: ${KeyNames.of(keyCode)} → ${target.labelRu}"
