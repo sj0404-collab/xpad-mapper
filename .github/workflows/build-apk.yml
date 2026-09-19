@@ -1,0 +1,51 @@
+name: build-apk
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build APK in Docker
+        run: |
+          docker build -t xpad-builder -f ci/Dockerfile .
+          mkdir -p dist
+          docker run --rm -v "$PWD":/workspace \
+            -e GRADLE_OPTS="-Dorg.gradle.daemon=false" \
+            xpad-builder bash -c "
+              cd /workspace &&
+              ./gradlew --no-daemon -PenableBuildCache=false assembleDebug &&
+              cp app/build/outputs/apk/debug/app-debug.apk /workspace/dist/xPad-debug.apk
+            "
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: xpad-apk
+          path: dist/xPad-debug.apk
+
+      - name: Bump and create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          prev=$(gh release list --limit 1 --json tagName --jq '.[0].tagName // empty' | sed -E 's/^v//' || true)
+          if [ -z "$prev" ]; then prev="0.0.0"; fi
+          major=$(echo "$prev" | cut -d. -f1)
+          minor=$(echo "$prev" | cut -d. -f2)
+          patch=$(echo "$prev" | cut -d. -f3)
+          patch=$((patch + 1))
+          tag="v${major}.${minor}.${patch}"
+          echo "Creating tag/release: $tag"
+          gh release create "$tag" dist/xPad-debug.apk \
+            --title "xPad $tag" \
+            --generate-notes

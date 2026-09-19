@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_devices"
+        android:icon="@drawable/ic_devices"
+        android:title="Устройства" />
+    <item
+        android:id="@+id/nav_test"
+        android:icon="@drawable/ic_test"
+        android:title="Тест" />
+    <item
+        android:id="@+id/nav_profiles"
+        android:icon="@drawable/ic_profiles"
+        android:title="Профили" />
+    <item
+        android:id="@+id/nav_help"
+        android:icon="@drawable/ic_help"
+        android:title="Помощь" />
+</menu>
