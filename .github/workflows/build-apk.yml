@@ -24,15 +24,15 @@ jobs:
             -e GRADLE_OPTS="-Dorg.gradle.daemon=false" \
             xpad-builder bash -c "
               cd /workspace &&
-              ./gradlew --no-daemon -PenableBuildCache=false assembleDebug &&
-              cp app/build/outputs/apk/debug/app-debug.apk /workspace/dist/xPad-debug.apk
+              ./gradlew --no-daemon -PenableBuildCache=false assembleRelease &&
+              cp app/build/outputs/apk/release/app-release.apk /workspace/dist/xPad-release.apk
             "
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: xpad-apk
-          path: dist/xPad-debug.apk
+          path: dist/xPad-release.apk
 
       - name: Bump and create release
         env:
@@ -46,6 +46,6 @@ jobs:
           patch=$((patch + 1))
           tag="v${major}.${minor}.${patch}"
           echo "Creating tag/release: $tag"
-          gh release create "$tag" dist/xPad-debug.apk \
+          gh release create "$tag" dist/xPad-release.apk \
             --title "xPad $tag" \
             --generate-notes
