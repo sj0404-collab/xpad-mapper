@@ -6,7 +6,7 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.InputDevice
+import android.view.InputDevice
 import android.widget.CheckBox
 import android.widget.LinearLayout
 import android.widget.ProgressBar
@@ -164,13 +164,11 @@ class ProfilesFragment : Fragment() {
                 val setBtn = MaterialButton(requireContext()).apply {
                     text = "⟳"
                     textSize = 14f
-                    style = com.google.android.material.R.style.Widget_Material3_Button_OutlinedButton
                     minWidth = dp(44)
                 }
                 val clearBtn = MaterialButton(requireContext()).apply {
                     text = "✕"
                     textSize = 14f
-                    style = com.google.android.material.R.style.Widget_Material3_Button_OutlinedButton
                     minWidth = dp(44)
                 }
                 setBtn.setOnClickListener {
