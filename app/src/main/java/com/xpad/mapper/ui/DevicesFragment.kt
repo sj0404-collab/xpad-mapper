@@ -1,5 +1,6 @@
 package com.xpad.mapper.ui
 
+import android.hardware.input.InputManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -25,6 +26,15 @@ class DevicesFragment : Fragment() {
 
     private var adapter: DeviceAdapter? = null
 
+    private val inputDeviceListener = object : InputManager.InputDeviceListener {
+        override fun onInputDeviceAdded(deviceId: Int) = refresh()
+        override fun onInputDeviceRemoved(deviceId: Int) = refresh()
+        override fun onInputDeviceChanged(deviceId: Int) = refresh()
+    }
+
+    private fun inputManager(): InputManager =
+        requireContext().getSystemService(android.content.Context.INPUT_SERVICE) as InputManager
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
@@ -47,18 +57,33 @@ class DevicesFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+        inputManager().registerInputDeviceListener(inputDeviceListener, null)
         refresh()
     }
 
-    private fun refresh() {
-        val devices = InputDevice.getDeviceIds()
+    override fun onPause() {
+        super.onPause()
+        inputManager().unregisterInputDeviceListener(inputDeviceListener)
+    }
+
+    /** Все внешние устройства ввода (включая «клавиатуры» — так Android видит многие геймпады). */
+    private fun externalDevices(): List<android.view.InputDevice> =
+        InputDevice.getDeviceIds()
             .map { InputDevice.getDevice(it) }
             .filterNotNull()
-            .filter {
-                val s = it.sources
-                s and (InputDevice.SOURCE_GAMEPAD or InputDevice.SOURCE_JOYSTICK or InputDevice.SOURCE_DPAD) != 0
+            .filter { dev ->
+                val s = dev.sources
+                val hasAny = s and (
+                    InputDevice.SOURCE_GAMEPAD or InputDevice.SOURCE_JOYSTICK or
+                        InputDevice.SOURCE_DPAD or InputDevice.SOURCE_KEYBOARD or
+                        InputDevice.SOURCE_MOUSE
+                    ) != 0
+                hasAny && !dev.isVirtual
             }
             .sortedBy { it.name.lowercase() }
+
+    private fun refresh() {
+        val devices = externalDevices()
 
         val profileStore = com.xpad.mapper.ProfileStore(requireContext())
 

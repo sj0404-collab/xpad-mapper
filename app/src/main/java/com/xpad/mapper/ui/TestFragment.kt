@@ -1,5 +1,7 @@
 package com.xpad.mapper.ui
 
+import android.content.Context
+import android.hardware.input.InputManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -25,6 +27,12 @@ class TestFragment : Fragment() {
 
     private var mapper = Mapper(null)
     private var deviceFilter: Int = -1
+
+    private val inputDeviceListener = object : InputManager.InputDeviceListener {
+        override fun onInputDeviceAdded(deviceId: Int) = fillSpinner()
+        override fun onInputDeviceRemoved(deviceId: Int) = fillSpinner()
+        override fun onInputDeviceChanged(deviceId: Int) = fillSpinner()
+    }
 
     private val logLines = ArrayDeque<String>()
     private var hatX = 0f
@@ -57,6 +65,7 @@ class TestFragment : Fragment() {
                     "Профиль: ${prof.deviceName}"
                 else
                     "Профиль не назначен — стандартная раскладка"
+                b.padInput.requestGamepadFocus()
             }
 
             override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
@@ -80,30 +89,42 @@ class TestFragment : Fragment() {
         }
 
         b.padInput.requestGamepadFocus()
-        b.tvHint.text = "Нажми «Захват фокуса», затем двигай стики и жми кнопки геймпада — они подсветятся. "
+        b.tvHint.text = "Выбери свой геймпад в списке (даже если он виден как «клавиатура»). Жми кнопки — события идут в лог. Если кнопки прилетают как клавиши клавиатуры, ты увидишь «RAW … не сопоставлено»."
     }
 
     private fun fillSpinner() {
-        val devices = InputDevice.getDeviceIds()
-            .map { InputDevice.getDevice(it) }
-            .filterNotNull()
-            .filter {
-                val s = it.sources
-                s and (InputDevice.SOURCE_GAMEPAD or InputDevice.SOURCE_JOYSTICK or InputDevice.SOURCE_DPAD) != 0
-            }
-            .map { DeviceEntry(it) }
+        val devices = externalDevices()
         val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, devices)
         b.spinnerDevice.adapter = adapter
         val idx = devices.indexOfFirst { it.device.id == PadState.selectedDeviceId }
         if (idx >= 0) {
+            b.tvEmptyTest.visibility = View.GONE
             b.spinnerDevice.setSelection(idx)
         } else if (devices.isNotEmpty()) {
+            b.tvEmptyTest.visibility = View.GONE
             b.spinnerDevice.setSelection(0)
         } else {
             b.tvEmptyTest.visibility = View.VISIBLE
-            b.tvActiveProfile.text = "Геймпад не найден. Подключи контроллер и зайди сюда снова."
+            b.tvActiveProfile.text = "Устройство ввода не найдено. Подключи геймпад по Bluetooth или USB — список обновится сам."
         }
     }
+
+    /** Все внешние устройства ввода (включая «клавиатуры» — так Android видит многие геймпады). */
+    private fun externalDevices(): List<DeviceEntry> =
+        InputDevice.getDeviceIds()
+            .map { InputDevice.getDevice(it) }
+            .filterNotNull()
+            .filter { dev ->
+                val s = dev.sources
+                val hasAny = s and (
+                    InputDevice.SOURCE_GAMEPAD or InputDevice.SOURCE_JOYSTICK or
+                        InputDevice.SOURCE_DPAD or InputDevice.SOURCE_KEYBOARD or
+                        InputDevice.SOURCE_MOUSE
+                    ) != 0
+                hasAny && !dev.isVirtual
+            }
+            .sortedBy { it.name.lowercase() }
+            .map { DeviceEntry(it) }
 
     private fun handleButton(keyCode: Int, action: Int) {
         val rawName = KeyNames.of(keyCode)
@@ -169,8 +190,16 @@ class TestFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+        val im = requireContext().getSystemService(Context.INPUT_SERVICE) as InputManager
+        im.registerInputDeviceListener(inputDeviceListener, null)
         b.padInput.requestGamepadFocus()
         fillSpinner()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        val im = requireContext().getSystemService(Context.INPUT_SERVICE) as InputManager
+        im.unregisterInputDeviceListener(inputDeviceListener)
     }
 
     override fun onDestroyView() {
