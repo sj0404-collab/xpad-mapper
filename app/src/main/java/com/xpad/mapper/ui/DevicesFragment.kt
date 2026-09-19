@@ -149,21 +149,21 @@ class DevicesFragment : Fragment() {
         override fun getItemCount(): Int = items.size
 
         override fun onBindViewHolder(holder: VH, position: Int) {
-            val it = items[position]
+            val item = items[position]
             val vb = holder.vb
-            vb.tvName.text = it.device.name
+            vb.tvName.text = item.device.name
             vb.tvId.text = String.format(
                 Locale.US, "ID %d · VID 0x%04X · PID 0x%04X",
-                it.device.id, it.device.vendorId, it.device.productId
+                item.device.id, item.device.vendorId, item.device.productId
             )
-            vb.tvSources.text = "Источники: " + DeviceDiag.sourcesLabel(it.device)
-            vb.tvBadge.text = it.diag.badgeText
-            vb.tvBadge.setBackgroundColor(it.diag.badgeColor)
-            vb.tvVerdict.text = it.diag.verdict
-            vb.tvTip.text = it.diag.tip
-            vb.badgeProfile.visibility = if (it.hasProfile) View.VISIBLE else View.GONE
-            vb.tvSelected.visibility = if (it.selected == true) View.VISIBLE else View.GONE
-            vb.root.setOnClickListener { onClick(it.device) }
+            vb.tvSources.text = "Источники: " + DeviceDiag.sourcesLabel(item.device)
+            vb.tvBadge.text = item.diag.badgeText
+            vb.tvBadge.setBackgroundColor(item.diag.badgeColor)
+            vb.tvVerdict.text = item.diag.verdict
+            vb.tvTip.text = item.diag.tip
+            vb.badgeProfile.visibility = if (item.hasProfile) View.VISIBLE else View.GONE
+            vb.tvSelected.visibility = if (item.selected == true) View.VISIBLE else View.GONE
+            vb.root.setOnClickListener { onClick(item.device) }
         }
 
         inner class VH(val vb: ItemDeviceBinding) : RecyclerView.ViewHolder(vb.root)
